@@ -32,8 +32,22 @@ public class Box
 
 public class MonopolyMain
 {
+
     public static void MakeNewPallet()
     {
+
+        string rootFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        string tzMonopolyFolderPath = Path.Combine(rootFolderPath, "TZMonopoly");
+        Directory.CreateDirectory(tzMonopolyFolderPath);
+        string resourcesFolderPath = Path.Combine(tzMonopolyFolderPath, "Resources");
+        Directory.CreateDirectory(resourcesFolderPath);
+        string filePath = Path.Combine(resourcesFolderPath, "PalletsList.json");
+
+        string fullPathToTextFile = Path.GetFullPath(filePath);
+        
+
+        
+
         Pallet newPalet = new Pallet();
         try
         {
@@ -120,7 +134,6 @@ public class MonopolyMain
         newPalet.volume += newPalet.weight * newPalet.height * newPalet.depth;
 
 
-        string filePath = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "PalletsList.json");
 
         if (File.Exists(filePath))
         {
