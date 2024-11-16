@@ -1,4 +1,6 @@
 ﻿using Newtonsoft.Json;
+using System.Data;
+using System.Text.RegularExpressions;
 using System.Xml;
 using Formatting = Newtonsoft.Json.Formatting;
 
@@ -66,15 +68,16 @@ public class MonopolyMain
                 newPalet.weight += newBox.weight;
                 newPalet.volume += newBox.volume;
 
-                if (newPalet.bestBeforeDate != null && newPalet.bestBeforeDate > newBox.bestBeforeDate)
+                if (newPalet.bestBeforeDate > newBox.bestBeforeDate && newPalet.bestBeforeDate != DateTime.Parse("01/01/0001"))
                 {
                     newPalet.bestBeforeDate = newBox.bestBeforeDate;
+                }
+                else if (newPalet.bestBeforeDate == DateTime.Parse("01/01/0001"))
+                {
+                    newPalet.bestBeforeDate = newBox.bestBeforeDate;
+
                 }
 
-                else if (newPalet.bestBeforeDate == null)
-                {
-                    newPalet.bestBeforeDate = newBox.bestBeforeDate;
-                }
             } 
             else if (isContinue.ToLower() == "продолжить")
             {
@@ -263,23 +266,53 @@ public class MonopolyMain
     {
         string filePath = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "PalletsList.json");
         string json = File.ReadAllText(filePath);
+        int groupCounter = 1;
+        List<Pallet> currentGroupList = new List<Pallet> { };
         List<Pallet> palletsList = JsonConvert.DeserializeObject<List<Pallet>>(json);
-        List<Pallet> sortedPallets = palletsList.OrderByDescending(pallet => pallet.bestBeforeDate).ToList();
-        foreach (Pallet pallet in sortedPallets)
+        List<Pallet> sortedPalletsByDate = palletsList.OrderByDescending(pallet => pallet.bestBeforeDate).ToList();
+        DateTime lastDateTime = sortedPalletsByDate[0].bestBeforeDate;
+        List<Pallet> sortedPalletsByBest = new List<Pallet>();
+
+        for (int j = 0; j < 3; j++)
         {
-            Console.WriteLine("*****Все Паллеты*****");
-            Console.WriteLine($"Паллет с ID: {pallet.ID}\nШирана - {pallet.weight}\nВысота - {pallet.height}" +
-                $"\nГлубина - {pallet.depth}\nВес - {pallet.weight}\nОбъём - {pallet.volume}\nСрок годности - {pallet.bestBeforeDate}\nКоробки внутри:");
-            foreach (Box box in pallet.boxes)
+            sortedPalletsByBest.Add(sortedPalletsByDate[j]);
+        }
+        sortedPalletsByBest = sortedPalletsByBest.OrderByDescending(pallet => pallet.volume).Reverse().ToList();
+        Console.WriteLine("\n3 паллета, которые содержат коробки с наибольшим сроком годности, отсортированные по возрастанию объема");
+        for (int i = 0; i < 3; i++)
+        {
+            Console.WriteLine($"**Паллет с ID: {sortedPalletsByBest[i].ID}\n Ширана - {sortedPalletsByBest[i].weight}\n Высота - {sortedPalletsByBest[i].height}" +$"\n Глубина - {sortedPalletsByBest[i].depth}\n Вес - {sortedPalletsByBest[i].weight}\n Объём - {sortedPalletsByBest[i].volume}\n Срок годности - {sortedPalletsByBest[i].bestBeforeDate}\n Коробки внутри:");
+            foreach (Box box in sortedPalletsByBest[i].boxes)
             {
-                Console.WriteLine($"ID: {box.ID}\n Ширана - {box.weight}\n Высота - {box.height}" +
-                $"\n Глубина - {box.depth}\n Вес - {box.weight}\n Объём - {box.volume}\n Срок годности - {box.bestBeforeDate}\n");
+                Console.WriteLine($"***ID: {box.ID}\n  Ширана - {box.weight}\n  Высота - {box.height}" +
+                $"\n  Глубина - {box.depth}\n  Вес - {box.weight}\n  Объём - {box.volume}\n  Срок годности - {box.bestBeforeDate}");
             }
-            Console.WriteLine("*****3 паллета с наибольшим сроком годности, отсортированные по возрастанию объема*****");
-            //Console.WriteLine()
+        }
+
+        sortedPalletsByDate.Reverse();
+
+
+        var groupPalletsByDate = from pallet in sortedPalletsByDate
+                                          group pallet by pallet.bestBeforeDate;
+        foreach(var groupP in groupPalletsByDate)
+        {
+            List<Pallet> sourtedGroupP = groupP.OrderByDescending(pallet => pallet.weight).ToList();
+            Console.WriteLine("\n" +"*Группа" + groupP.Key + "\n");
+            foreach (var pallet in sourtedGroupP) 
+            {
+                Console.WriteLine($"**Паллет с ID: {pallet.ID}\n Ширана - {pallet.weight}\n Высота - {pallet.height}" +
+                    $"\n Глубина - {pallet.depth}\n Вес - {pallet.weight}\n Объём - {pallet.volume}\n Срок годности - {pallet.bestBeforeDate}\n Коробки внутри:");
+                foreach (Box box in pallet.boxes)
+                {
+                    Console.WriteLine($"***ID: {box.ID}\n  Ширана - {box.weight}\n  Высота - {box.height}" +
+                    $"\n  Глубина - {box.depth}\n  Вес - {box.weight}\n  Объём - {box.volume}\n  Срок годности - {box.bestBeforeDate}");
+                }
+
+            }
         }
 
     }
+
 
 
 
